@@ -1,8 +1,21 @@
 {
   "version": 2,
-  "dgSpecHash": "FzUu1gz0uh0=",
+  "dgSpecHash": "EHmy5YtCyhs=",
   "success": true,
   "projectFilePath": "/Users/josip/Documents/DotNetTutorial/GameStore.Api/GameStore.Api.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "/Users/josip/.nuget/packages/microsoft.data.sqlite.core/10.0.6/microsoft.data.sqlite.core.10.0.6.nupkg.sha512",
+    "/Users/josip/.nuget/packages/microsoft.entityframeworkcore/10.0.6/microsoft.entityframeworkcore.10.0.6.nupkg.sha512",
+    "/Users/josip/.nuget/packages/microsoft.entityframeworkcore.abstractions/10.0.6/microsoft.entityframeworkcore.abstractions.10.0.6.nupkg.sha512",
+    "/Users/josip/.nuget/packages/microsoft.entityframeworkcore.analyzers/10.0.6/microsoft.entityframeworkcore.analyzers.10.0.6.nupkg.sha512",
+    "/Users/josip/.nuget/packages/microsoft.entityframeworkcore.relational/10.0.6/microsoft.entityframeworkcore.relational.10.0.6.nupkg.sha512",
+    "/Users/josip/.nuget/packages/microsoft.entityframeworkcore.sqlite/10.0.6/microsoft.entityframeworkcore.sqlite.10.0.6.nupkg.sha512",
+    "/Users/josip/.nuget/packages/microsoft.entityframeworkcore.sqlite.core/10.0.6/microsoft.entityframeworkcore.sqlite.core.10.0.6.nupkg.sha512",
+    "/Users/josip/.nuget/packages/microsoft.extensions.dependencymodel/10.0.6/microsoft.extensions.dependencymodel.10.0.6.nupkg.sha512",
+    "/Users/josip/.nuget/packages/sqlitepclraw.bundle_e_sqlite3/2.1.11/sqlitepclraw.bundle_e_sqlite3.2.1.11.nupkg.sha512",
+    "/Users/josip/.nuget/packages/sqlitepclraw.core/2.1.11/sqlitepclraw.core.2.1.11.nupkg.sha512",
+    "/Users/josip/.nuget/packages/sqlitepclraw.lib.e_sqlite3/2.1.11/sqlitepclraw.lib.e_sqlite3.2.1.11.nupkg.sha512",
+    "/Users/josip/.nuget/packages/sqlitepclraw.provider.e_sqlite3/2.1.11/sqlitepclraw.provider.e_sqlite3.2.1.11.nupkg.sha512"
+  ],
   "logs": []
 }
