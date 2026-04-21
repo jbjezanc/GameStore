@@ -1,1 +1,43 @@
+# Local DB
+GameStore.Api/GameStore.db
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors / IDEs
+.vs/
 .vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.rsuser
+
+# .NET build output
+**/bin/
+**/obj/
+TestResults/
+
+# Node / frontend
+**/node_modules/
+**/dist/
+**/.vite/
+**/coverage/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Env files
+**/.env
+**/.env.local
+**/.env.development.local
+**/.env.test.local
+**/.env.production.local
+
+# Keep sample env files
+!**/.env.example
