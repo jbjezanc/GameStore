@@ -1,5 +1,6 @@
 using GameStore.Api.Data;
 using GameStore.Api.Dtos;
+using GameStore.Api.Messaging;
 using GameStore.Api.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -43,6 +44,30 @@ public static class GamesEndpoints
         })
         .WithName(GetgameEndpointName);
 
+        // GET /games/1/price-history
+        group.MapGet("/{id}/price-history", async (int id, GameStoreContext dbContext) =>
+        {
+            bool gameExists = await dbContext.Games.AnyAsync(game => game.Id == id);
+
+            if (!gameExists)
+            {
+                return Results.NotFound();
+            }
+
+            var history = await dbContext.PriceHistories
+                .Where(entry => entry.GameId == id)
+                .OrderByDescending(entry => entry.ChangedAtUtc)
+                .Select(entry => new PriceHistoryDto(
+                    entry.OldPrice,
+                    entry.NewPrice,
+                    entry.ChangedAtUtc
+                ))
+                .AsNoTracking()
+                .ToListAsync();
+
+            return Results.Ok(history);
+        });
+
         // POST /games
         group.MapPost("/", async (CreateGameDto newGame, GameStoreContext dbContext) =>
         {
@@ -69,21 +94,42 @@ public static class GamesEndpoints
         });
 
         // PUT /games/1
-        group.MapPut("/{id}", async (int id, UpdateGameDto updatedGame, GameStoreContext dbContext) =>
+        group.MapPut("/{id}", async (
+            int id,
+            UpdateGameDto updatedGame,
+            GameStoreContext dbContext,
+            IPriceChangeEventPublisher priceChangeEventPublisher,
+            CancellationToken cancellationToken) =>
         {
-            var existingGame = await dbContext.Games.FindAsync(id);
+            var existingGame = await dbContext.Games.FindAsync(new object[] { id }, cancellationToken);
 
             if (existingGame is null)
             {
                 return Results.NotFound();
             }
 
+            decimal previousPrice = existingGame.Price;
+
             existingGame.Name = updatedGame.Name;
             existingGame.GenreId = updatedGame.GenreId;
             existingGame.Price = updatedGame.Price;
             existingGame.ReleaseDate = updatedGame.ReleaseDate;
 
-            await dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            if (previousPrice != existingGame.Price)
+            {
+                await priceChangeEventPublisher.PublishAsync(
+                    new PriceChangedEvent(
+                        EventId: Guid.NewGuid(),
+                        GameId: existingGame.Id,
+                        OldPrice: previousPrice,
+                        NewPrice: existingGame.Price,
+                        ChangedAtUtc: DateTime.UtcNow
+                    ),
+                    cancellationToken
+                );
+            }
 
             return Results.NoContent();
         });

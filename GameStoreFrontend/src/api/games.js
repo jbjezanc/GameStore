@@ -28,6 +28,14 @@ function normalizeGenre(genre) {
   };
 }
 
+function normalizePriceHistory(entry) {
+  return {
+    oldPrice: Number(entry.oldPrice),
+    newPrice: Number(entry.newPrice),
+    changedAtUtc: entry.changedAtUtc
+  };
+}
+
 function toBackendGamePayload(game) {
   return {
     name: game.name,
@@ -124,6 +132,11 @@ export async function fetchGame(id) {
 export async function fetchGenres() {
   const payload = await request(GENRES_BASE_URL);
   return payload.map(normalizeGenre);
+}
+
+export async function fetchPriceHistory(id) {
+  const payload = await request(`${GAMES_BASE_URL}/${id}/price-history`);
+  return payload.map(normalizePriceHistory);
 }
 
 export async function createGame(game) {

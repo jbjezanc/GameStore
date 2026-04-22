@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createGame, deleteGame, fetchGame, fetchGames, fetchGenres, updateGame } from "./api/games";
+import { createGame, deleteGame, fetchGame, fetchGames, fetchGenres, fetchPriceHistory, updateGame } from "./api/games";
 
 const EMPTY_FORM = {
   name: "",
@@ -56,6 +56,23 @@ function formatDate(value) {
   }
 
   return new Intl.DateTimeFormat("en-US").format(date);
+}
+
+function formatTimestamp(value) {
+  if (!value) {
+    return "N/A";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short"
+  }).format(date);
 }
 
 function toDateInputValue(value) {
@@ -143,6 +160,8 @@ export default function App() {
   const [dialogMode, setDialogMode] = useState(null);
   const [activeGame, setActiveGame] = useState(null);
   const [formValues, setFormValues] = useState(EMPTY_FORM);
+  const [priceHistory, setPriceHistory] = useState([]);
+  const [isPriceHistoryLoading, setIsPriceHistoryLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sortConfig, setSortConfig] = useState({
     key: "name",
@@ -191,6 +210,8 @@ export default function App() {
     setDialogMode(null);
     setActiveGame(null);
     setFormValues(EMPTY_FORM);
+    setPriceHistory([]);
+    setIsPriceHistoryLoading(false);
     setIsSubmitting(false);
   }
 
@@ -199,15 +220,26 @@ export default function App() {
     setErrorMessage("");
     setActiveGame(null);
     setFormValues(EMPTY_FORM);
+    setPriceHistory([]);
     setDialogMode("create");
   }
 
   async function openEditDialog(game) {
     setSuccessMessage("");
     setErrorMessage("");
+    setIsPriceHistoryLoading(true);
 
     try {
-      const gameToEdit = await fetchGame(game.id);
+      const [gameResult, historyResult] = await Promise.allSettled([
+        fetchGame(game.id),
+        fetchPriceHistory(game.id)
+      ]);
+
+      if (gameResult.status !== "fulfilled") {
+        throw gameResult.reason;
+      }
+
+      const gameToEdit = gameResult.value;
 
       setActiveGame(gameToEdit);
       setFormValues({
@@ -216,9 +248,18 @@ export default function App() {
         price: String(gameToEdit.price ?? ""),
         releaseDate: toDateInputValue(gameToEdit.releaseDate)
       });
+
+      if (historyResult.status === "fulfilled") {
+        setPriceHistory(historyResult.value);
+      } else {
+        setPriceHistory([]);
+      }
+
       setDialogMode("edit");
     } catch (error) {
       setErrorMessage(getErrorMessage(error, "Unable to load game details for editing."));
+    } finally {
+      setIsPriceHistoryLoading(false);
     }
   }
 
@@ -327,6 +368,7 @@ export default function App() {
   }
 
   const isFormDialogOpen = dialogMode === "create" || dialogMode === "edit";
+  const isEditDialog = dialogMode === "edit";
   const dialogTitle = dialogMode === "edit" ? "Edit Game" : "New Game";
   const submitLabel = dialogMode === "edit" ? "Save Changes" : "Create Game";
   const genrePlaceholder = isGenresLoading
@@ -483,6 +525,37 @@ export default function App() {
                 <span>Release Date</span>
                 <input name="releaseDate" type="date" value={formValues.releaseDate} onChange={handleFieldChange} />
               </label>
+
+              {isEditDialog ? (
+                <section className="history-panel" aria-live="polite">
+                  <div className="history-heading">
+                    <h3>Price History</h3>
+                    <p className="history-caption">Changes appear here after the background consumer stores them.</p>
+                  </div>
+
+                  {isPriceHistoryLoading ? (
+                    <p className="history-empty">Loading price history...</p>
+                  ) : priceHistory.length === 0 ? (
+                    <p className="history-empty">No price changes recorded yet.</p>
+                  ) : (
+                    <ul className="history-list">
+                      {priceHistory.map((entry) => (
+                        <li
+                          key={`${entry.changedAtUtc}-${entry.oldPrice}-${entry.newPrice}`}
+                          className="history-item"
+                        >
+                          <div className="history-item__prices">
+                            <span>{formatPrice(entry.oldPrice)}</span>
+                            <span className="history-item__arrow">→</span>
+                            <span>{formatPrice(entry.newPrice)}</span>
+                          </div>
+                          <span className="history-item__date">{formatTimestamp(entry.changedAtUtc)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
+              ) : null}
 
               <div className="modal-actions">
                 <button type="button" className="secondary-button" onClick={closeDialog} disabled={isSubmitting}>
